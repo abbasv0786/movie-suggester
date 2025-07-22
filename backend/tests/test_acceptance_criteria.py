@@ -96,7 +96,7 @@ class TestStory13AcceptanceCriteria:
     def test_ac4_basic_error_handling_for_invalid_inputs(self):
         """AC4: Basic error handling for invalid inputs"""
         # Test missing prompt (validation error)
-        response = self.client.post("/suggest", json={"lang": "en"})
+        response = self.client.post("/suggest", json={})
         assert response.status_code == 422  # Validation error
         
         # Test very long prompt (should still work)

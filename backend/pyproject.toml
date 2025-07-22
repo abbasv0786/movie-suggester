@@ -11,8 +11,10 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "httpx>=0.25.0",
     "python-dotenv>=1.0.0",
-    "google-generativeai>=0.8.0",
-    "exa-py>=1.1.0",
+    "openai>=1.0.0",  # For OpenRouter API compatibility
+    "sse-starlette>=1.6.0",  # For Server-Sent Events streaming
+    # "google-generativeai>=0.8.0",  # Commented out - replaced with OpenRouter
+    # "exa-py>=1.1.0",  # Commented out - keeping for future use
 ]
 
 [project.optional-dependencies]

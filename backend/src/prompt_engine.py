@@ -24,64 +24,69 @@ class PromptEngine:
         target_language: str = "en"
     ) -> str:
         """
-        Construct a comprehensive prompt for movie recommendations
+        Construct conversation-aware prompt for movie recommendations and chat
         
         Args:
-            user_request: Original user's movie preference request
-            search_context: Real-time movie data from SearchAgent
+            user_request: Original user's request (movie preferences or conversational)
+            search_context: Real-time movie data from SearchAgent (may be empty for LLM knowledge use)
             target_language: Target language for responses
             
         Returns:
-            Structured prompt for LLM
+            Structured prompt for LLM with conversation intelligence
         """
         try:
+            # Determine if we have real-time context or should use LLM knowledge
+            has_realtime_data = bool(search_context)
+            
             # Build context sections
-            context_summary = self._build_context_summary(search_context)
+            context_section = self._build_context_section(search_context)
             language_instruction = self._get_language_instruction(target_language)
             
-            # Construct the complete prompt
-            prompt = f"""SYSTEM: You are an expert movie recommendation AI with deep knowledge of cinema across all genres, eras, and cultures.
+            # Construct conversation-aware prompt
+            prompt = f"""You are an expert movie and TV series recommendation AI with deep knowledge of cinema and television from all eras and cultures. You are also a friendly conversational assistant.
 
 {language_instruction}
 
-USER REQUEST:
+USER INPUT:
 {user_request}
 
-REAL-TIME MOVIE CONTEXT:
-{context_summary}
+{context_section}
 
-TASK:
-Based on the user's request and the real-time movie data above, provide 3-4 personalized movie recommendations that best match their preferences.
+INSTRUCTIONS:
+1. CONVERSATION DETECTION: First determine if this is a conversational input (greeting, help request, casual chat) or a movie/series request
+2. CONVERSATION HANDLING: If conversational, respond naturally and warmly, inviting them to describe their preferences
+3. MOVIE/SERIES RECOMMENDATIONS: If requesting recommendations, provide 3-4 personalized suggestions
+4. MIXED INPUTS: If combining greeting + request, acknowledge greeting briefly then focus on suggestions
 
-REQUIREMENTS:
-1. Use the real-time context to ensure recommendations are current and relevant
-2. Provide exact movie titles (no made-up films)
-3. Give compelling 2-3 sentence explanations for each recommendation
-4. Consider the user's specific preferences, mood, and context
-5. Include a mix of well-known and potentially lesser-known gems when appropriate
+RESPONSE GUIDELINES:
+- For greetings/casual: Use {{"title": "Chat Response", "reason": "Your warm conversational response"}}
+- For help requests: Use {{"title": "Help Response", "reason": "Explanation of your capabilities with examples"}}
+- For movie/series requests: Use specific titles and compelling explanations
+- Always be warm, helpful, and engaging
 
 OUTPUT FORMAT:
-Return your response as a JSON array with this exact structure:
+Return exactly in this JSON format:
 [
-  {{"title": "Movie Title", "reason": "Compelling explanation of why this movie matches their request..."}},
-  {{"title": "Another Movie", "reason": "Another detailed explanation..."}}
+  {{"title": "Title", "reason": "Response or explanation..."}},
+  {{"title": "Another Title", "reason": "Another explanation..."}}
 ]
 
 IMPORTANT: Return ONLY the JSON array, no additional text or formatting."""
 
-            logger.info(f"Constructed prompt for language: {target_language}")
+            logger.info(f"Constructed conversation-aware prompt for language: {target_language}, realtime_data: {has_realtime_data}")
             return prompt
             
         except Exception as e:
             logger.error(f"Error constructing prompt: {e}")
             return self._get_fallback_prompt(user_request, target_language)
     
-    def _build_context_summary(self, search_context: List[Dict[str, Any]]) -> str:
-        """Build a comprehensive summary of search context"""
+    def _build_context_section(self, search_context: List[Dict[str, Any]]) -> str:
+        """Build context section for conversation-aware prompts"""
         if not search_context:
-            return "No specific real-time movie data available."
+            return """KNOWLEDGE SOURCE:
+Use your extensive built-in knowledge of movies and TV series. The system has determined that real-time search is not needed for this request, so rely on your training data for recommendations."""
         
-        context_text = ""
+        context_text = "REAL-TIME MOVIE DATA:\n"
         for i, movie in enumerate(search_context[:5], 1):
             context_text += f"\n{i}. TITLE: {movie.get('title', 'Unknown')}\n"
             context_text += f"   SUMMARY: {movie.get('summary', 'No summary available')[:300]}...\n"
@@ -94,6 +99,7 @@ IMPORTANT: Return ONLY the JSON array, no additional text or formatting."""
                 context_text += f"   SOURCE: {movie['url']}\n"
             context_text += "\n"
         
+        context_text += "\nUSE this real-time data to ensure your recommendations are current and relevant."
         return context_text
     
     def _get_language_instruction(self, target_language: str) -> str:
