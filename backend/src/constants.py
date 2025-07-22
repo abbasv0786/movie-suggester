@@ -24,27 +24,8 @@ MAX_LANG_CODE_LENGTH = 5
 REASONABLE_YEAR_MIN = 1800
 REASONABLE_YEAR_MAX = 2030
 
-# Emergency Fallback Movies
-EMERGENCY_FALLBACK_MOVIES = [
-    {
-        "title": "The Shawshank Redemption",
-        "genre": ["drama"],
-        "year": 1994,
-        "reason": "Timeless classic about hope and redemption",
-        "description": "Epic drama about friendship and perseverance in prison"
-    },
-    {
-        "title": "Inception",
-        "genre": ["sci-fi", "thriller"],
-        "year": 2010,
-        "reason": "Mind-bending sci-fi thriller",
-        "description": "Complex heist film set within layered dreams"
-    },
-    {
-        "title": "Spirited Away",
-        "genre": ["animated", "adventure"],
-        "year": 2001,
-        "reason": "Magical animated masterpiece",
-        "description": "Enchanting tale of a girl in a supernatural world"
-    }
-] 
+# Emergency Fallback Movies - REMOVED: Using AI-based fallbacks instead
+# This ensures the system uses AI recommendations even in emergency scenarios
+AI_FALLBACK_ENABLED = True
+AI_FALLBACK_MIN_SUGGESTIONS = 3
+AI_FALLBACK_PROMPT = "Recommend popular, well-known movies or TV series that are widely acclaimed and suitable for general audiences" 

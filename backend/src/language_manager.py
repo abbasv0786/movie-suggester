@@ -133,20 +133,25 @@ ENGLISH TEXT:
             logger.error(f"Error translating to {target_language}: {e}")
             return text  # Return original text if translation fails
     
-    async def process_multilingual_request(self, text: str, target_language: str = "en") -> Dict[str, Any]:
+    async def process_multilingual_request(self, text: str, target_language: Optional[str] = None) -> Dict[str, Any]:
         """
-        Process a multilingual request with language detection and translation
+        Process a multilingual request with automatic language detection
         
         Args:
             text: Input text in any supported language
-            target_language: Desired output language
+            target_language: Desired output language (if None, uses detected language)
             
         Returns:
             Dictionary with processed text and language information
         """
         try:
-            # Detect input language
+            # Detect input language automatically
             detected_language = await self.detect_language(text)
+            logger.info(f"Auto-detected language: {detected_language}")
+            
+            # Use detected language as target if not specified, fallback to English
+            if target_language is None:
+                target_language = detected_language if detected_language in self.language_names else "en"
             
             # For now, use the input text as English text (can be enhanced with translation)
             english_text = text
@@ -165,11 +170,12 @@ ENGLISH TEXT:
             
         except Exception as e:
             logger.error(f"Error processing multilingual request: {e}")
+            # Fallback to English when detection fails
             return {
                 "original_text": text,
                 "detected_language": "en",
                 "english_text": text,
-                "target_language": target_language,
-                "requires_output_translation": target_language != "en",
+                "target_language": "en",
+                "requires_output_translation": False,
                 "error": str(e)
             } 

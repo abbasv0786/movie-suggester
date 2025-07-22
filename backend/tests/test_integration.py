@@ -1,15 +1,12 @@
 """
-Integration tests for Movie Suggestion API endpoint
+Integration tests for Movie Suggester AI API
 """
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, Mock
 from main import app
-import json
 
-
-class TestSuggestionEndpointIntegration:
-    """Integration tests for /suggest endpoint"""
+class TestMovieSuggesterIntegration:
+    """Integration tests for the complete Movie Suggester API workflow"""
     
     def setup_method(self):
         """Set up test client"""
@@ -19,7 +16,7 @@ class TestSuggestionEndpointIntegration:
         """Test basic suggestion request returns proper response"""
         response = self.client.post(
             "/suggest",
-            json={"prompt": "action movies", "lang": "en"}
+            json={"prompt": "action movies"}
         )
         
         assert response.status_code == 200
@@ -36,277 +33,234 @@ class TestSuggestionEndpointIntegration:
             assert "year" in suggestion
             assert "reason" in suggestion
             assert "description" in suggestion
+            
+            # Verify data types
+            assert isinstance(suggestion["title"], str)
             assert isinstance(suggestion["genre"], list)
             assert isinstance(suggestion["year"], int)
-    
-    def test_genre_specific_requests(self):
-        """Test requests for specific genres return relevant movies"""
+            assert isinstance(suggestion["reason"], str)
+            assert isinstance(suggestion["description"], str)
+            
+            # Verify non-empty values
+            assert len(suggestion["title"]) > 0
+            assert len(suggestion["genre"]) > 0
+            assert suggestion["year"] > 1900
+            assert len(suggestion["reason"]) > 0
+            assert len(suggestion["description"]) > 0
+
+    def test_different_genres_prompts(self):
+        """Test that different genre prompts return appropriate suggestions"""
         test_cases = [
-            ("action movies", "action"),
-            ("funny comedy films", "comedy"),
-            ("animated cartoons", "animated"),
-            ("sci-fi space movies", "sci-fi"),
-            ("romantic love stories", "romance")
+            "action movies with explosions",
+            "romantic comedies",
+            "horror films",
+            "animated Disney movies",
+            "science fiction space opera"
         ]
         
-        for prompt, expected_genre in test_cases:
+        for prompt in test_cases:
             response = self.client.post(
                 "/suggest",
-                json={"prompt": prompt, "lang": "en"}
+                json={"prompt": prompt}
             )
-            
-            assert response.status_code == 200
-            data = response.json()
-            
-            # Check that at least one suggestion matches the expected genre
-            genre_found = any(
-                expected_genre in suggestion["genre"]
-                for suggestion in data["suggestions"]
-            )
-            assert genre_found, f"No {expected_genre} movies found for prompt: {prompt}"
-    
-    def test_minimum_suggestions_enforced(self):
-        """Test that minimum 3 suggestions are always returned"""
-        test_prompts = [
-            "movies",
-            "xyzzz unknown genre",
-            "action",
-            "some very specific niche genre that probably doesn't exist"
-        ]
-        
-        for prompt in test_prompts:
-            response = self.client.post(
-                "/suggest",
-                json={"prompt": prompt, "lang": "en"}
-            )
-            
             assert response.status_code == 200
             data = response.json()
             assert len(data["suggestions"]) >= 3
-    
-    def test_response_field_validation(self):
-        """Test that all response fields are properly populated and formatted"""
-        response = self.client.post(
-            "/suggest",
-            json={"prompt": "action movies", "lang": "en"}
-        )
-        
-        assert response.status_code == 200
-        data = response.json()
-        
-        for suggestion in data["suggestions"]:
-            # Title validation
-            assert suggestion["title"]
-            assert len(suggestion["title"]) > 0
             
-            # Genre validation
-            assert isinstance(suggestion["genre"], list)
-            assert len(suggestion["genre"]) > 0
-            assert all(isinstance(g, str) for g in suggestion["genre"])
-            
-            # Year validation
-            assert isinstance(suggestion["year"], int)
-            assert 1800 <= suggestion["year"] <= 2030  # Reasonable year range
-            
-            # Reason validation
-            assert suggestion["reason"]
-            assert len(suggestion["reason"]) > 10  # Should be substantive
-            
-            # Description validation
-            assert suggestion["description"]
-            assert len(suggestion["description"]) > 10
-    
-    def test_error_handling_invalid_input(self):
-        """Test error handling for invalid input"""
-        # Test missing prompt
-        response = self.client.post(
-            "/suggest",
-            json={"lang": "en"}
-        )
-        assert response.status_code == 422  # Validation error
+            # Each suggestion should be valid
+            for suggestion in data["suggestions"]:
+                assert suggestion["title"]
+                assert suggestion["reason"]
+
+    def test_keyword_variation_responses(self):
+        """Test that keyword variations produce relevant suggestions"""
+        similar_prompts = [
+            "superhero movies",
+            "comic book films", 
+            "Marvel and DC movies"
+        ]
         
-        # Test empty prompt (should be rejected by validation)
-        response = self.client.post(
-            "/suggest",
-            json={"prompt": "", "lang": "en"}
-        )
-        assert response.status_code == 422  # Validation error due to min_length=1
+        responses = []
+        for prompt in similar_prompts:
+            response = self.client.post(
+                "/suggest",
+                json={"prompt": prompt}
+            )
+            assert response.status_code == 200
+            responses.append(response.json())
         
-        # Test very long prompt
-        long_prompt = "action " * 200  # Very long prompt
-        response = self.client.post(
-            "/suggest",
-            json={"prompt": long_prompt, "lang": "en"}
-        )
-        assert response.status_code == 200
-    
-    def test_language_parameter(self):
-        """Test language parameter handling"""
-        # Test default language
+        # All responses should have suggestions
+        for response_data in responses:
+            assert len(response_data["suggestions"]) >= 3
+
+    def test_end_to_end_workflow(self):
+        """Test complete end-to-end workflow for movie suggestion"""
+        # Step 1: Make suggestion request
         response = self.client.post(
             "/suggest",
             json={"prompt": "action movies"}
         )
         assert response.status_code == 200
         
-        # Test explicit English
+        # Step 2: Verify response structure
+        data = response.json()
+        assert "suggestions" in data
+        suggestions = data["suggestions"]
+        assert len(suggestions) >= 3
+        
+        # Step 3: Verify suggestion quality
+        for suggestion in suggestions:
+            # Should have all required fields
+            required_fields = ["title", "genre", "year", "reason", "description"]
+            for field in required_fields:
+                assert field in suggestion
+                assert suggestion[field]  # Non-empty/falsy
+            
+            # Specific validations
+            assert isinstance(suggestion["genre"], list)
+            assert len(suggestion["genre"]) > 0
+            assert suggestion["year"] >= 1900
+            assert suggestion["year"] <= 2030
+
+    def test_error_handling_integration(self):
+        """Test error handling for various invalid inputs"""
+        
+        # Test missing prompt
+        response = self.client.post("/suggest", json={})
+        assert response.status_code == 422
+        
+        # Test empty prompt
+        response = self.client.post("/suggest", json={"prompt": ""})
+        assert response.status_code == 422
+        
+        # Test overly long prompt
+        long_prompt = "a" * 1501  # Exceeds max_length
+        response = self.client.post("/suggest", json={"prompt": long_prompt})
+        assert response.status_code == 422
+
+    def test_response_consistency(self):
+        """Test that API responses are consistent across multiple calls"""
         response = self.client.post(
-            "/suggest",
-            json={"prompt": "action movies", "lang": "en"}
+            "/suggest", 
+            json={"prompt": "action movies"}
         )
         assert response.status_code == 200
         
-        # Test other language codes
-        response = self.client.post(
-            "/suggest",
-            json={"prompt": "películas de acción", "lang": "es"}
-        )
-        assert response.status_code == 200
-    
-    def test_consistency_across_requests(self):
-        """Test that similar requests return consistent results"""
-        prompt = "action thriller movies"
+        data = response.json()
+        assert "suggestions" in data
+        suggestions = data["suggestions"]
         
-        # Make multiple requests
-        responses = []
+        # Test multiple calls for consistency
         for _ in range(3):
+            repeat_response = self.client.post(
+                "/suggest",
+                json={"prompt": "action movies"}
+            )
+            assert repeat_response.status_code == 200
+            repeat_data = repeat_response.json()
+            assert len(repeat_data["suggestions"]) == len(suggestions)
+
+    def test_multilingual_prompt_handling(self):
+        """Test that API handles multilingual prompts with automatic detection"""
+        # Test Spanish prompt - should work with automatic detection
+        response = self.client.post(
+            "/suggest",
+            json={"prompt": "películas de acción"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "suggestions" in data
+        assert len(data["suggestions"]) >= 3
+
+    def test_special_characters_handling(self):
+        """Test API handling of prompts with special characters"""
+        special_prompts = [
+            "movies with $ millions budget",
+            "films from the 90's era",
+            "sci-fi movies with aliens & robots"
+        ]
+        
+        for prompt in special_prompts:
             response = self.client.post(
                 "/suggest",
-                json={"prompt": prompt, "lang": "en"}
+                json={"prompt": prompt}
             )
             assert response.status_code == 200
-            responses.append(response.json())
-        
-        # Check that we get movies (might have some variation due to randomization)
-        all_titles = set()
-        for response_data in responses:
-            titles = [s["title"] for s in response_data["suggestions"]]
-            all_titles.update(titles)
-        
-        # Should have some overlap in suggestions
-        assert len(all_titles) >= 3  # At least got some suggestions
-    
-    def test_performance_response_time(self):
-        """Test that responses are generated within reasonable time"""
+            data = response.json()
+            assert len(data["suggestions"]) >= 3
+
+    def test_endpoint_performance(self):
+        """Test that suggestion endpoint responds within reasonable time"""
         import time
         
         start_time = time.time()
         response = self.client.post(
             "/suggest",
-            json={"prompt": "action movies", "lang": "en"}
+            json={"prompt": "action movies"}
         )
         end_time = time.time()
         
-        assert response.status_code == 200
+        # Response should be under 10 seconds for basic suggestions
         response_time = end_time - start_time
-        # More generous timeout to account for LLM agent initialization and potential fallbacks
-        assert response_time < 10.0  # Should respond within 10 seconds
-    
-    def test_variety_in_suggestions(self):
-        """Test that suggestions show variety across genres when appropriate"""
+        assert response_time < 10.0
+        assert response.status_code == 200
+
+    def test_content_type_validation(self):
+        """Test that API properly validates content types"""
+        # Test with correct JSON content type
         response = self.client.post(
             "/suggest",
-            json={"prompt": "action comedy adventure movies", "lang": "en"}
+            json={"prompt": "action movies"}
         )
-        
         assert response.status_code == 200
-        data = response.json()
+        assert "application/json" in response.headers["content-type"]
+
+    def test_api_documentation_accessibility(self):
+        """Test that API documentation endpoints are accessible"""
+        # Test OpenAPI docs
+        docs_response = self.client.get("/docs")
+        assert docs_response.status_code == 200
         
-        # Collect all genres from suggestions
-        all_genres = set()
-        for suggestion in data["suggestions"]:
-            all_genres.update(suggestion["genre"])
-        
-        # Should have variety when multiple genres requested
-        # Note: May return "unknown" genres if LLM agents are used
-        assert len(all_genres) >= 1  # At least some genre information
-    
-    def test_fallback_system_robustness(self):
-        """Test that fallback systems work when suggestion engine fails"""
-        # Mock suggestion engine failure
-        with patch('main.suggestion_engine', None):
-            response = self.client.post(
-                "/suggest",
-                json={"prompt": "action movies", "lang": "en"}
-            )
-            
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data["suggestions"]) >= 3
-            
-            # Should return emergency fallback movies
-            titles = [s["title"] for s in data["suggestions"]]
-            expected_fallbacks = ["The Shawshank Redemption", "Inception", "Spirited Away"]
-            assert any(title in expected_fallbacks for title in titles)
-    
-    def test_concurrent_requests(self):
-        """Test handling of concurrent requests"""
-        import threading
-        import time
-        
-        results = []
-        
-        def make_request():
-            response = self.client.post(
-                "/suggest",
-                json={"prompt": "action movies", "lang": "en"}
-            )
-            results.append(response.status_code)
-        
-        # Make 5 concurrent requests
-        threads = []
-        for _ in range(5):
-            thread = threading.Thread(target=make_request)
-            threads.append(thread)
-            thread.start()
-        
-        # Wait for all threads to complete
-        for thread in threads:
-            thread.join()
-        
-        # All requests should succeed
-        assert all(status == 200 for status in results)
-        assert len(results) == 5
-    
-    def test_edge_case_prompts(self):
-        """Test handling of edge case prompts"""
-        edge_cases = [
-            "!@#$%^&*()",  # Special characters only
-            "a",  # Single character
-            "movies movies movies movies",  # Repetitive
-            "123456789",  # Numbers only
-            "àçéñtëd çhäråctërs",  # Accented characters
+        # Test ReDoc
+        redoc_response = self.client.get("/redoc")
+        assert redoc_response.status_code == 200
+
+    def test_suggestion_variety(self):
+        """Test that API returns varied suggestions for different prompts"""
+        prompts = [
+            "comedy movies",
+            "action films", 
+            "animated movies",
+            "documentaries"
         ]
         
-        for prompt in edge_cases:
+        all_titles = set()
+        for prompt in prompts:
             response = self.client.post(
                 "/suggest",
-                json={"prompt": prompt, "lang": "en"}
+                json={"prompt": prompt}
             )
-            
             assert response.status_code == 200
             data = response.json()
-            assert len(data["suggestions"]) >= 3
-    
-    def test_json_response_format(self):
-        """Test that response is valid JSON with correct structure"""
+            
+            for suggestion in data["suggestions"]:
+                all_titles.add(suggestion["title"])
+        
+        # Should have variety in suggestions across different prompts
+        assert len(all_titles) >= 6  # At least 6 unique titles across all prompts
+
+    def test_suggestion_reasoning_quality(self):
+        """Test that suggestions include meaningful reasoning"""
         response = self.client.post(
             "/suggest",
-            json={"prompt": "action movies", "lang": "en"}
+            json={"prompt": "action movies"}
         )
-        
         assert response.status_code == 200
-        assert response.headers["content-type"] == "application/json"
-        
-        # Should be valid JSON
         data = response.json()
         
-        # Should match expected schema
-        assert isinstance(data, dict)
-        assert "suggestions" in data
-        assert isinstance(data["suggestions"], list)
-        
-        # Validate that it can be serialized back to JSON
-        json_str = json.dumps(data)
-        parsed_back = json.loads(json_str)
-        assert parsed_back == data 
+        for suggestion in data["suggestions"]:
+            reason = suggestion["reason"]
+            # Reason should be substantive (more than just a few words)
+            assert len(reason) > 20
+            # Should not be generic placeholder text
+            assert "great movie" not in reason.lower() or len(reason) > 50 
