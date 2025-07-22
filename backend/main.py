@@ -173,30 +173,122 @@ async def suggest_movies(request: SuggestionRequest):
 
 @app.post("/suggest/stream")
 async def suggest_movies_stream(request: SuggestionRequest):
-    """Streaming movie suggestion endpoint using DeepSeek"""
+    """Streaming movie suggestion endpoint using DeepSeek with poster enrichment"""
     try:
         logger.info(f"Starting streaming suggestions for: '{request.prompt[:50]}...'")
         
         if not llm_agent:
             raise HTTPException(status_code=503, detail="Streaming service unavailable")
         
-        async def generate_stream():
-            """Generate streaming response"""
+        async def generate_enriched_stream():
+            """Generate streaming response with poster enrichment"""
             try:
+                # Step 1: Stream the raw AI response while collecting it
+                logger.info("🎬 Streaming AI response...")
+                yield f"data: {json.dumps({'status': 'Generating AI suggestions...'})}\n\n"
+                
+                collected_content = ""
                 async for chunk in llm_agent.generate_suggestions_stream(request.prompt):
-                    # Format as Server-Sent Events
+                    # Stream the raw content to user
                     yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+                    collected_content += chunk
+                
+                # Step 2: Parse the complete AI response
+                logger.info("🎨 Parsing AI response and fetching posters...")
+                yield f"data: {json.dumps({'status': 'Fetching movie posters...'})}\n\n"
+                
+                # Parse the collected content into suggestions
+                ai_suggestions = llm_agent.parse_suggestions(collected_content)
+                
+                if not ai_suggestions:
+                    yield f"data: {json.dumps({'error': 'No suggestions generated'})}\n\n"
+                    return
+                
+                # Step 3: Fetch posters for movie titles
+                movie_titles_for_posters = []
+                suggestions = []
+                
+                for suggestion in ai_suggestions:
+                    title = suggestion.get("title", "Unknown")
+                    reason = suggestion.get("reason", "AI recommendation")
+                    
+                    if title not in ["Chat Response", "Help Response"]:
+                        movie_titles_for_posters.append(title)
+                    
+                    suggestions.append(MovieSuggestion(
+                        title=title,
+                        genre=["recommendation"],
+                        year=2024,
+                        reason=reason,
+                        description="AI-powered movie/series recommendation using DeepSeek",
+                        content_type="movie"
+                    ))
+                
+                # Step 4: Fetch posters concurrently
+                if movie_titles_for_posters and poster_service:
+                    try:
+                        poster_data = await poster_service.get_multiple_posters(movie_titles_for_posters)
+                        
+                        # Update suggestions with poster data
+                        for suggestion in suggestions:
+                            if suggestion.title in poster_data and poster_data[suggestion.title]:
+                                poster_info = poster_data[suggestion.title]
+                                
+                                suggestion.poster_url = poster_info.get("poster_url")
+                                suggestion.imdb_id = poster_info.get("imdb_id")
+                                suggestion.imdb_rating = poster_info.get("rating")
+                                suggestion.imdb_title = poster_info.get("imdb_title")
+                                
+                                if poster_info.get("year"):
+                                    try:
+                                        suggestion.year = int(poster_info["year"])
+                                    except (ValueError, TypeError):
+                                        pass
+                                
+                                if suggestion.poster_url:
+                                    suggestion.description = f"AI-powered recommendation with poster and IMDB data (Rating: {suggestion.imdb_rating or 'N/A'})"
+                        
+                        poster_count = len([s for s in suggestions if s.poster_url])
+                        logger.info(f"✅ Enhanced {poster_count} suggestions with posters")
+                        
+                    except Exception as e:
+                        logger.error(f"Error fetching posters: {e}")
+                
+                # Step 5: Stream the final enriched response
+                yield f"data: {json.dumps({'status': 'Finalizing with posters...'})}\n\n"
+                
+                # Convert suggestions to dict format for JSON serialization
+                enriched_response = {
+                    "suggestions": [
+                        {
+                            "title": s.title,
+                            "genre": s.genre,
+                            "year": s.year,
+                            "reason": s.reason,
+                            "description": s.description,
+                            "content_type": s.content_type,
+                            "poster_url": s.poster_url,
+                            "imdb_id": s.imdb_id,
+                            "imdb_rating": s.imdb_rating,
+                            "imdb_title": s.imdb_title
+                        }
+                        for s in suggestions
+                    ]
+                }
+                
+                # Stream the final enriched result
+                yield f"data: {json.dumps({'final_result': enriched_response})}\n\n"
                 
                 # Send completion signal
-                yield f"data: {json.dumps({'complete': True})}\n\n"
+                yield f"data: {json.dumps({'complete': True, 'poster_count': len([s for s in suggestions if s.poster_url])})}\n\n"
                 
             except Exception as e:
-                logger.error(f"Error in streaming: {e}")
-                error_response = json.dumps({'error': str(e)})
+                logger.error(f"Error in enriched streaming: {e}")
+                error_response = json.dumps({'error': str(e), 'fallback': True})
                 yield f"data: {error_response}\n\n"
         
         return StreamingResponse(
-            generate_stream(),
+            generate_enriched_stream(),
             media_type="text/plain",
             headers={
                 "Cache-Control": "no-cache",
@@ -208,7 +300,7 @@ async def suggest_movies_stream(request: SuggestionRequest):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error setting up streaming: {e}", exc_info=True)
+        logger.error(f"Error setting up enriched streaming: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Unable to start streaming suggestions")
 
 async def _deepseek_suggestions(request: SuggestionRequest) -> SuggestionResponse:

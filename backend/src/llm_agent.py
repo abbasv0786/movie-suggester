@@ -30,6 +30,9 @@ class LLMAgent:
         self.temperature = 0.7
         self.max_tokens = 1500
         
+        # Initialize httpx client for streaming (better SSE handling)
+        self.http_client = httpx.AsyncClient(timeout=30.0)
+        
     async def generate_suggestions(
         self, 
         user_prompt: str, 
@@ -80,7 +83,7 @@ class LLMAgent:
         search_context: Optional[List[Dict[str, Any]]] = None
     ) -> AsyncGenerator[str, None]:
         """
-        Generate streaming movie suggestions using DeepSeek
+        Generate streaming movie suggestions using DeepSeek with proper SSE handling
         
         Args:
             user_prompt: User's movie preference request
@@ -95,22 +98,63 @@ class LLMAgent:
             
             logger.info(f"Starting streaming suggestions with DeepSeek model: {self.model}")
             
-            # Generate streaming content using DeepSeek via OpenRouter
-            stream = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
+            # Prepare request payload
+            payload = {
+                "model": self.model,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                stream=True
-            )
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
+                "stream": True
+            }
             
-            # Stream the response
-            async for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    yield chunk.choices[0].delta.content
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Make streaming request using httpx for better SSE handling
+            async with self.http_client.stream(
+                "POST",
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=payload,
+                headers=headers
+            ) as response:
+                
+                if response.status_code != 200:
+                    logger.error(f"OpenRouter API error: {response.status_code}")
+                    fallback_content = json.dumps(self._get_fallback_suggestions(user_prompt), indent=2)
+                    yield fallback_content
+                    return
+                
+                buffer = ""
+                async for chunk in response.aiter_text(chunk_size=1024):
+                    buffer += chunk
+                    
+                    # Process complete SSE lines
+                    while True:
+                        line_end = buffer.find('\n')
+                        if line_end == -1:
+                            break
+                        
+                        line = buffer[:line_end].strip()
+                        buffer = buffer[line_end + 1:]
+                        
+                        if line.startswith('data: '):
+                            data = line[6:]
+                            if data == '[DONE]':
+                                return
+                            
+                            try:
+                                data_obj = json.loads(data)
+                                content = data_obj["choices"][0]["delta"].get("content")
+                                if content:
+                                    yield content
+                            except (json.JSONDecodeError, KeyError, IndexError):
+                                # Skip malformed chunks
+                                continue
                     
         except Exception as e:
             logger.error(f"Error streaming suggestions with DeepSeek: {e}")
@@ -138,6 +182,10 @@ For movie requests: [
 ]
 
 Be helpful, accurate, and respond in the user's language. Focus on popular, accessible content unless they specifically ask for niche recommendations."""
+    
+    def parse_suggestions(self, response_text: str) -> List[Dict[str, str]]:
+        """Parse LLM response into structured movie suggestions (public method)"""
+        return self._parse_suggestions(response_text)
     
     def _parse_suggestions(self, response_text: str) -> List[Dict[str, str]]:
         """Parse LLM response into structured movie suggestions"""
@@ -223,4 +271,20 @@ Be helpful, accurate, and respond in the user's language. Focus on popular, acce
                 "title": "Spirited Away",
                 "reason": "A beautiful animated film that's perfect for all ages and showcases incredible storytelling and artistry."
             }
-        ] 
+        ]
+    
+    async def close(self):
+        """Close HTTP clients"""
+        try:
+            await self.http_client.aclose()
+        except Exception:
+            pass
+    
+    def __del__(self):
+        """Cleanup on deletion"""
+        try:
+            if hasattr(self, 'http_client') and self.http_client:
+                import asyncio
+                asyncio.create_task(self.http_client.aclose())
+        except Exception:
+            pass 
