@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+from datetime import datetime
 import logging
 import json
 
@@ -218,9 +219,9 @@ async def suggest_movies_stream(request: SuggestionRequest):
                     suggestions.append(MovieSuggestion(
                         title=title,
                         genre=["recommendation"],
-                        year=2024,
+                        year=datetime.now().year,
                         reason=reason,
-                        description="AI-powered movie/series recommendation using DeepSeek",
+                        description=f"AI-powered movie/series recommendation using DeepSeek on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
                         content_type="movie"
                     ))
                 
@@ -323,7 +324,7 @@ async def _deepseek_suggestions(request: SuggestionRequest) -> SuggestionRespons
                 suggestions.append(MovieSuggestion(
                     title=title,
                     genre=["conversation"],
-                    year=2024,
+                    year=datetime.now().year,
                     reason=reason,
                     description="AI conversational response",
                     content_type="chat"
@@ -334,7 +335,7 @@ async def _deepseek_suggestions(request: SuggestionRequest) -> SuggestionRespons
                 suggestions.append(MovieSuggestion(
                     title=title,
                     genre=["recommendation"],
-                    year=2024,  # Default year for AI suggestions
+                    year=datetime.now().year,  # Default year for AI suggestions
                     reason=reason,
                     description="AI-powered movie/series recommendation using DeepSeek",
                     content_type="movie"

@@ -6,6 +6,26 @@ docs/
 __pycache__/
 web-bundles/
 
+# Monorepo-specific patterns
+# Backend Python virtual environments and caches
+backend/.venv/
+backend/__pycache__/
+backend/.env
+backend/.env.local
+
+# Frontend Node.js and build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Bun specific
+frontend/bun.lockb
+
 # Python
 *.py[cod]
 *$py.class
