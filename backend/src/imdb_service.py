@@ -15,7 +15,7 @@ class IMDBService:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize IMDB service with API key"""
         self.api_key = api_key or os.getenv("IMDB_API_KEY")
-        self.base_url = "https://imdbapi.dev/api"
+        self.base_url = "https://api.imdbapi.dev/api"
         
         # Configure HTTP client with timeout and retry
         self.client = httpx.AsyncClient(

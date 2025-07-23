@@ -230,7 +230,7 @@ export const ChatInterface = forwardRef<ChatInterfaceRef, ChatInterfaceProps>(({
     enablePersistence: true,
     initialMessages,
     mockResponseDelay: CHAT_CONFIG.MOCK_RESPONSE_DELAY,
-    enableStreaming: true // Explicitly enable streaming API
+    enableStreaming: false // Disable streaming API - use regular API instead
   });
 
   // Expose clearMessages function to parent component
