@@ -286,7 +286,7 @@ export const MovieMessageBubble: React.FC<MovieMessageBubbleProps> = ({
                   message.suggestions?.map((movie, index) => (
                     <motion.div key={`${movie.title}-${index}`} variants={movieItemVariants}>
                       <MovieCard
-                        movie={movie}
+                        suggestion={movie}
                         variant="compact"
                         onExpand={onMovieExpand}
                         onPosterClick={onPosterClick}

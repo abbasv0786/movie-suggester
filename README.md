@@ -38,10 +38,14 @@ Movie-suggestor/
 - **Health Check**: Simple health endpoint to verify service status
 - **Auto Documentation**: Interactive API docs at `/docs`
 
-### Frontend (React) - *Coming Soon*
-- Modern React 18 with TypeScript
-- Responsive UI built with Vite
-- Fast development with Bun package manager
+### Frontend (React)
+- **Chat Interface**: Interactive chat-based movie suggestion experience
+- **Movie Cards**: Beautiful movie recommendation cards with posters and details
+- **Responsive Grid Layout**: 2-column grid layout for movie suggestions (single column on mobile)
+- **Real-time Chat**: Seamless communication with AI movie assistant
+- **Modern UI**: Built with React 18, TypeScript, and styled-components
+- **Fast Development**: Powered by Vite and Bun package manager
+- **Animations**: Smooth transitions and animations using Framer Motion
 
 ## Quick Start
 
@@ -77,9 +81,29 @@ Movie-suggestor/
 
    The API will be available at `http://localhost:8000`
 
-### Frontend Development *(Coming Soon)*
+### Frontend Development
 
-Frontend setup and development instructions will be added in future stories.
+1. Navigate to frontend directory:
+   ```bash
+   cd frontend
+   ```
+
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
+
+3. Start the development server:
+   ```bash
+   bun run dev
+   ```
+
+   The frontend will be available at `http://localhost:3000`
+
+4. Build for production:
+   ```bash
+   bun run build
+   ```
 
 ## API Documentation
 
@@ -108,9 +132,22 @@ curl -X POST "http://localhost:8000/suggest" \
 - **Developer Experience**: Single repository for full-stack development
 
 ### Current Development Status
-- ✅ **Backend**: Fully functional FastAPI application
-- 🚧 **Frontend**: Directory structure prepared, implementation pending
-- 🚧 **Integration**: Frontend-backend integration pending
+- ✅ **Backend**: Fully functional FastAPI application with movie suggestions
+- ✅ **Frontend**: Complete React application with chat interface and movie cards
+- ✅ **Integration**: Frontend-backend integration working with real-time API calls
+- ✅ **UI/UX**: Responsive grid layout with 2-column movie suggestions display
+
+## Recent Updates
+
+### UI/UX Improvements
+- **Grid Layout Enhancement**: Fixed movie recommendations to display in a proper 2-column grid layout for better visual organization
+- **Responsive Design**: Maintained single-column layout on mobile devices for optimal mobile experience
+- **Visual Alignment**: Improved spacing and alignment of movie suggestion cards
+
+### Technical Improvements
+- Enhanced chat interface with better message handling
+- Improved IMDB service integration for better movie data retrieval
+- Updated hook implementations for more reliable state management
 
 ## Testing
 
@@ -133,18 +170,24 @@ Full-stack integration tests will be added as the frontend is developed.
 - **Gemini 2.0 Flash**: LLM for intelligent suggestions
 - **Exa API**: Real-time movie data search
 
-### Frontend *(Prepared)*
-- **React 18**: Modern frontend framework
-- **TypeScript**: Type-safe JavaScript
+### Frontend
+- **React 18**: Modern frontend framework with hooks and functional components
+- **TypeScript**: Type-safe JavaScript with comprehensive type definitions
 - **Vite**: Fast build tool and dev server
 - **Bun**: Fast package manager and runtime
+- **Styled Components**: CSS-in-JS for component styling
+- **Framer Motion**: Smooth animations and transitions
+- **React Query**: Server state management and API integration
+- **React Router**: Client-side routing and navigation
 
 ## Contributing
 
-1. Backend changes: Work in `backend/` directory
-2. Frontend changes: Work in `frontend/` directory *(when implemented)*
-3. Documentation: Update relevant README files
-4. Testing: Run appropriate test suites before submitting changes
+1. **Backend changes**: Work in `backend/` directory
+2. **Frontend changes**: Work in `frontend/` directory
+3. **Documentation**: Update relevant README files
+4. **Testing**: Run appropriate test suites before submitting changes
+5. **UI/UX improvements**: Focus on responsive design and user experience
+6. **Code formatting**: Ensure consistent code style across the project
 
 ## License
 

@@ -142,7 +142,9 @@ export const cacheImage = (src: string, img: HTMLImageElement): void => {
   if (imageCache.size > 50) {
     // Simple LRU: remove oldest entry
     const firstKey = imageCache.keys().next().value;
-    imageCache.delete(firstKey);
+    if (firstKey) {
+      imageCache.delete(firstKey);
+    }
   }
   
   imageCache.set(src, img);
@@ -218,4 +220,39 @@ export const FALLBACK_IMAGES = {
   series: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDEwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjZjA5M2ZiIi8+Cjx0ZXh0IHg9IjUwIiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfk7o8L3RleHQ+Cjx0ZXh0IHg9IjUwIiB5PSI5NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlNlcmllczwvdGV4dD4KPC9zdmc+Cg==',
   
   chat: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDEwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjNGZhY2ZlIi8+Cjx0ZXh0IHg9IjUwIiB5PSI3NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjE0IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfkqw8L3RleHQ+Cjx0ZXh0IHg9IjUwIiB5PSI5NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNoYXQ8L3RleHQ+Cjwvc3ZnPgo='
-} as const; 
+} as const;
+
+/**
+ * Common poster URLs for fallback scenarios
+ */
+export const ERROR_POSTER_URL = FALLBACK_IMAGES.movie;
+export const DEFAULT_POSTER_URL = FALLBACK_IMAGES.movie;
+
+/**
+ * Gets the best poster URL from available options
+ */
+export const getBestPosterUrl = (
+  posterUrl?: string | null,
+  imdbTitle?: string | null,
+  contentType: 'movie' | 'series' | 'chat' = 'movie',
+  targetWidth: number = 300
+): string => {
+  // If we have a valid poster URL, optimize it
+  if (isValidImageUrl(posterUrl)) {
+    return optimizeImdbImageUrl(posterUrl, targetWidth);
+  }
+  
+  // Fall back to content type specific placeholder
+  // Note: imdbTitle is available for future enhancements but not currently used
+  void imdbTitle; // Explicitly mark as intentionally unused
+  return FALLBACK_IMAGES[contentType] || FALLBACK_IMAGES.movie;
+};
+
+/**
+ * Setup lazy loading for images (currently a placeholder for future implementation)
+ */
+export const setupLazyLoading = (element: HTMLElement): void => {
+  // Placeholder for intersection observer setup
+  // This can be implemented later if needed
+  console.log('Lazy loading setup for element:', element);
+}; 

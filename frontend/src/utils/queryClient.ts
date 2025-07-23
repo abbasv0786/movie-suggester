@@ -58,8 +58,8 @@ export const queryKeys = {
   // Movie suggestions
   suggestions: {
     all: ['suggestions'] as const,
-    byPrompt: (prompt: string, lang: string) => 
-      ['suggestions', 'byPrompt', { prompt, lang }] as const,
+    byPrompt: (prompt: string) => 
+      ['suggestions', 'byPrompt', { prompt }] as const,
   },
   
   // User preferences (future use)

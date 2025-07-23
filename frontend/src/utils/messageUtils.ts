@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow, isToday, isYesterday } from 'date-fns';
 import { Message, MOCK_RESPONSES } from '@/types/chat';
+import { MovieSuggestion } from '@/types/api';
 
 // Generate unique message ID
 export const generateMessageId = (): string => {
@@ -11,13 +12,7 @@ export const createMessage = (
   content: string,
   type: 'user' | 'bot',
   status: 'sending' | 'sent' | 'error' = 'sent',
-  suggestions?: Array<{
-    title: string;
-    genre: string[];
-    year: number;
-    reason: string;
-    description: string;
-  }>
+  suggestions?: MovieSuggestion[]
 ): Message => ({
   id: generateMessageId(),
   type,

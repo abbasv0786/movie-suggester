@@ -226,7 +226,7 @@ export const ApiDemo: React.FC = () => {
     
     if (!prompt.trim()) return;
     
-    const request: SuggestionRequest = { prompt: prompt.trim(), lang };
+    const request: SuggestionRequest = { prompt: prompt.trim() };
     
     try {
       const response = await suggestionMutation.mutateAsync(request);
@@ -375,7 +375,7 @@ export const ApiDemo: React.FC = () => {
           variant="banner"
           title="API Request Failed"
           showDetails={true}
-          onRetry={() => suggestionMutation.mutate({ prompt, lang })}
+          onRetry={() => suggestionMutation.mutate({ prompt })}
           onDismiss={() => suggestionMutation.reset()}
           dismissible={true}
         />
@@ -398,12 +398,13 @@ export const ApiDemo: React.FC = () => {
             <div>
               {/* Skeleton loading for movie cards */}
               {[1, 2, 3].map(i => (
-                <StyledMovieCard key={i} movie={{
+                <StyledMovieCard key={i} suggestion={{
                   title: '',
                   genre: [],
                   year: 0,
                   reason: '',
-                  description: ''
+                  description: '',
+                  content_type: 'movie'
                 }} isLoading={true} />
               ))}
             </div>
@@ -416,7 +417,7 @@ export const ApiDemo: React.FC = () => {
               {results.suggestions.map((movie, index) => (
                 <StyledMovieCard 
                   key={index} 
-                  movie={movie}
+                  suggestion={movie}
                   variant="detailed"
                   showExpandButton={true}
                 />
@@ -436,7 +437,7 @@ export const ApiDemo: React.FC = () => {
                 <span style={{ color: test.success ? '#38a169' : '#e53e3e' }}>
                   {test.success ? '✅' : '❌'}
                 </span>{' '}
-                {test.timestamp.toLocaleTimeString()} - {test.request.prompt} ({test.request.lang})
+                {test.timestamp.toLocaleTimeString()} - {test.request.prompt}
                 {test.error && (
                   <div style={{ marginLeft: '20px', color: '#e53e3e' }}>
                     Error: {test.error.message || 'Unknown error'}

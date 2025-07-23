@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { ChatTestPage } from '@/pages/ChatTestPage';
-import { TestPage } from '@/pages/TestPage';
+
 import { queryClient } from '@/utils/queryClient';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 

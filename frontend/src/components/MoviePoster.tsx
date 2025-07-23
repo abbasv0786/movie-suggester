@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { MoviePosterProps, ImageLoadState } from '../types/movie';
-import { getBestPosterUrl, ERROR_POSTER_URL, DEFAULT_POSTER_URL, setupLazyLoading } from '../utils/imageUtils';
+import { getBestPosterUrl, ERROR_POSTER_URL, DEFAULT_POSTER_URL } from '../utils/imageUtils';
 
 // Poster container
 const PosterContainer = styled.div<{ 
@@ -165,7 +165,18 @@ export const MoviePoster: React.FC<MoviePosterProps> = ({
   useEffect(() => {
     if (!lazy || !imageRef.current) return;
 
-    observerRef.current = setupLazyLoading();
+    // Create intersection observer for lazy loading
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && imageRef.current) {
+            setCurrentSrc(src);
+            observerRef.current?.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
     
     if (observerRef.current && imageRef.current) {
       observerRef.current.observe(imageRef.current);
@@ -278,7 +289,12 @@ export const ResponsiveMoviePoster: React.FC<ResponsiveMoviePosterProps> = ({
   style,
   ...props
 }) => {
-  const bestPosterUrl = getBestPosterUrl(movie, posterUrl);
+  const bestPosterUrl = getBestPosterUrl(
+    posterUrl,
+    movie.title,
+    'movie',
+    150
+  );
   const dimensions = responsiveSizes[size];
 
   return (
