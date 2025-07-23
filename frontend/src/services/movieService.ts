@@ -28,11 +28,6 @@ export class MovieService {
     this.validateSuggestionRequest(request);
 
     return new Promise((resolve, reject) => {
-      const baseURL = apiClient.defaults.baseURL || 'http://localhost:8000';
-      const eventSource = new EventSource(`${baseURL}/suggest/stream`, {
-        // Note: EventSource doesn't support POST directly, we'll need fetch with streaming
-      });
-
       // We'll use fetch with streaming instead of EventSource for POST
       this.handleStreamingRequest(request, onChunk, onStatus)
         .then(resolve)

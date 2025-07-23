@@ -6,7 +6,7 @@ import apiClient, { withRetry, checkApiHealth } from '../utils/apiClient';
 // Hook for movie suggestions
 export function useSuggestMovies(request: SuggestionRequest, enabled: boolean = true) {
   return useQuery({
-    queryKey: queryKeys.suggestions.byPrompt(request.prompt, request.lang),
+    queryKey: queryKeys.suggestions.byPrompt(request.prompt),
     queryFn: async (): Promise<SuggestionResponse> => {
       return withRetry(async () => {
         const response = await apiClient.post<SuggestionResponse>('/suggest', request);
@@ -40,7 +40,7 @@ export function useSendSuggestionRequest() {
     onSuccess: (data, variables) => {
       // Cache the result for future queries
       queryClient.setQueryData(
-        queryKeys.suggestions.byPrompt(variables.prompt, variables.lang),
+        queryKeys.suggestions.byPrompt(variables.prompt),
         data
       );
     },
@@ -90,7 +90,7 @@ export function useSuggestionState() {
 
   const prefetchSuggestion = (request: SuggestionRequest) => {
     return queryClient.prefetchQuery({
-      queryKey: queryKeys.suggestions.byPrompt(request.prompt, request.lang),
+      queryKey: queryKeys.suggestions.byPrompt(request.prompt),
       queryFn: async () => {
         return withRetry(async () => {
           const response = await apiClient.post<SuggestionResponse>('/suggest', request);
@@ -103,7 +103,7 @@ export function useSuggestionState() {
 
   const getSuggestionFromCache = (request: SuggestionRequest): SuggestionResponse | undefined => {
     return queryClient.getQueryData(
-      queryKeys.suggestions.byPrompt(request.prompt, request.lang)
+      queryKeys.suggestions.byPrompt(request.prompt)
     );
   };
 
