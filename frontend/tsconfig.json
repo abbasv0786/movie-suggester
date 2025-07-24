@@ -19,6 +19,9 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    
+    /* Types */
+    "types": ["node"],
 
     /* Path mapping */
     "baseUrl": ".",
