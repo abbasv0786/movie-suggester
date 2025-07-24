@@ -131,15 +131,15 @@ function getAuthHeaders(): AuthHeaders {
   const authHeaders: AuthHeaders = {};
   
   // Get auth token from localStorage (future implementation)
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    authHeaders.Authorization = `Bearer ${token}`;
+  const authToken = localStorage.getItem('authToken');
+  if (authToken) {
+    authHeaders.Authorization = `Bearer ${authToken}`;
   }
 
   // Get API key from environment or localStorage (future implementation)
-  const apiKey = localStorage.getItem('api_key');
-  if (apiKey) {
-    authHeaders['X-API-Key'] = apiKey;
+  const apiKeyValue = localStorage.getItem('apiKey');
+  if (apiKeyValue) {
+    authHeaders['X-API-Key'] = apiKeyValue;
   }
 
   return authHeaders;
