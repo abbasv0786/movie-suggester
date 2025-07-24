@@ -19,7 +19,7 @@ const isProduction = import.meta.env.PROD;
 export const apiConfig: ApiConfig = {
   // Base URL for API calls
   baseURL: isDevelopment 
-    ? (import.meta.env.VITE_USE_PROXY === 'true' ? '/api' : 'http://localhost:8000')
+    ? (import.meta.env.VITE_USE_PROXY === 'true' ? '/api' : import.meta.env.VITE_API_URL || 'http://localhost:8000')
     : import.meta.env.VITE_API_URL || 'http://localhost:8000',
   
   // Request timeout (30 seconds)

@@ -10,6 +10,26 @@ A modern React chat interface for AI-powered movie recommendations, built with T
 - **Node.js** (≥18.0.0) - Required for some dependencies
 - **Modern browser** - Chrome, Firefox, Safari, or Edge
 
+### Environment Setup
+
+1. **Copy environment template**:
+   ```bash
+   cp env.template .env
+   ```
+
+2. **Configure your environment variables**:
+   ```bash
+   # Edit .env file with your settings
+   VITE_API_URL=http://localhost:8000  # Your backend API URL
+   VITE_USE_PROXY=false                # Use Vite proxy for development
+   VITE_DEBUG_MODE=true               # Enable debug logging
+   ```
+
+3. **For production deployment** (Netlify):
+   - Set `VITE_API_URL` to your production backend URL
+   - Example: `VITE_API_URL=https://your-backend-api.com`
+   - Copy `env.production.example` to `.env.production` for production builds
+
 ### Installation
 
 1. **Install Bun** (if not already installed):
@@ -42,6 +62,38 @@ A modern React chat interface for AI-powered movie recommendations, built with T
 | `bun run preview` | Preview production build |
 | `bun run type-check` | Run TypeScript type checking |
 | `bun run lint` | Run ESLint code analysis |
+| `bun run setup` | Set up environment variables |
+
+## 🔧 Environment Variables
+
+The frontend uses environment variables to configure API endpoints and features. All variables are prefixed with `VITE_` to be accessible in the browser.
+
+### Available Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `VITE_API_URL` | Backend API URL | `http://localhost:8000` | ✅ |
+| `VITE_USE_PROXY` | Use Vite dev proxy | `false` | ❌ |
+| `VITE_DEBUG_MODE` | Enable debug logging | `true` | ❌ |
+| `VITE_LOG_LEVEL` | Logging level | `debug` | ❌ |
+| `VITE_ENABLE_ANALYTICS` | Enable analytics | `false` | ❌ |
+| `VITE_ENABLE_ERROR_REPORTING` | Enable error reporting | `false` | ❌ |
+
+### Quick Setup
+
+```bash
+# Run the setup script
+bun run setup
+
+# Or manually copy the template
+cp env.template .env
+```
+
+### Development vs Production
+
+- **Development**: Uses localhost backend URL
+- **Production**: Uses your deployed backend URL
+- **Netlify**: Set environment variables in Netlify dashboard
 
 ## 🎬 Testing the Chat Interface
 
