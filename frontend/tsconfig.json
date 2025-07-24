@@ -34,5 +34,10 @@
     }
   },
   "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "references": [{ "path": "./tsconfig.node.json" }],
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "^0.19.0",
+    "@esbuild/darwin-x64": "^0.19.0",
+    "@esbuild/darwin-arm64": "^0.19.0"
+  }
 } 
