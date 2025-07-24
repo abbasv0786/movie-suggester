@@ -26,9 +26,8 @@ A modern React chat interface for AI-powered movie recommendations, built with T
    ```
 
 3. **For production deployment** (Netlify):
-   - Set `VITE_API_URL` to your production backend URL
+   - Set `VITE_API_URL` to your production backend URL in Netlify dashboard
    - Example: `VITE_API_URL=https://your-backend-api.com`
-   - Copy `env.production.example` to `.env.production` for production builds
 
 ### Installation
 
@@ -93,21 +92,7 @@ cp env.template .env
 
 - **Development**: Uses localhost backend URL
 - **Production**: Uses your deployed backend URL
-- **Netlify**: Set environment variables in Netlify dashboard (recommended)
-
-### Deployment Options
-
-#### 🎯 **Recommended: Netlify Dashboard**
-1. Go to your Netlify site dashboard
-2. Navigate to **Site settings > Environment variables**
-3. Add `VITE_API_URL=https://your-backend-api.com`
-
-#### 📁 **Alternative: .env.production file**
-```bash
-cp env.production.example .env.production
-# Edit with your production values
-```
-**Note**: Only use for non-sensitive configuration
+- **Netlify**: Set environment variables in Netlify dashboard
 
 ## 🎬 Testing the Chat Interface
 
