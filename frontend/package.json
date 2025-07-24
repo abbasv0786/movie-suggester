@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "setup": "./setup-env.sh"
+    "setup": "./setup-env.sh",
+    "deploy-checklist": "./scripts/deploy-checklist.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.83.0",
